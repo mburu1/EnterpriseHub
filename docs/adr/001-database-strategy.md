@@ -43,7 +43,13 @@ on repository interfaces, never on a specific provider.
 - **Con**: no cross-store transactions — a write that spans, say, MSSQL and the Mongo notification
   store cannot be atomic. Mitigated by the domain-event + message-bus pattern (ADR-002): the primary
   write commits first, and downstream stores are updated via at-least-once event delivery.
-- **Known limitation**: `Pomelo.EntityFrameworkCore.MySql` had not yet published an EF Core 10
-  build at the time this was built (see `NU1608` warning during restore) — the package still works
-  correctly against EF Core 10's relational API surface, but this is worth revisiting on Pomelo's
-  next release.
+- **Known limitation**: `Pomelo.EntityFrameworkCore.MySql` 9.0.0 had not yet published an EF Core
+  10 build at the time this was built (see `NU1608` warning during restore). The app builds and
+  runs fine against it, but `dotnet ef migrations add --context MySqlDbContext` fails at design
+  time with `MissingMethodException: AbstractionsStrings.ArgumentIsEmpty` — an actual binary
+  incompatibility between Pomelo's compiled reference to EF Core 9 abstractions and the EF Core 10
+  abstractions in this project, not just a version-range warning. MSSQL and PostgreSQL migrations
+  are checked in (`Persistence/{Mssql,Postgres}/Migrations`); the MySQL billing schema currently
+  ships via `Database.EnsureCreated()`-equivalent setup until Pomelo publishes an EF Core
+  10-targeted release, at which point `dotnet ef migrations add --context MySqlDbContext` should
+  be re-run.
