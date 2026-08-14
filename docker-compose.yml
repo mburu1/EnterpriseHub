@@ -143,11 +143,30 @@ services:
       - rabbitmq
     ports:
       - "${ASPNETCORE_HTTP_PORT:-5001}:8080"
-      - "${ASPNETCORE_HTTPS_PORT:-7001}:8081"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-    env_file:
-      - .env
+      ConnectionStrings__Mssql: "Server=mssql;Database=${MSSQL_DB:-EnterpriseHub};User Id=sa;Password=${MSSQL_PASSWORD:-YOUR_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-YOUR_PASSWORD};Database=${POSTGRES_DB:-enterprisehub_analytics}"
+      ConnectionStrings__MySql: "Server=mysql;Port=3306;Database=${MYSQL_DB:-enterprisehub_billing};User=${MYSQL_USER:-root};Password=${MYSQL_PASSWORD:-YOUR_PASSWORD};"
+      ConnectionStrings__Oracle: "User Id=${ORACLE_USER:-system};Password=${ORACLE_PASSWORD:-YOUR_PASSWORD};Data Source=oracle:1521/${ORACLE_SERVICE_NAME:-XEPDB1};"
+      ConnectionStrings__Redis: "redis:6379"
+      Mongo__ConnectionString: "mongodb://mongo:27017/"
+      Mongo__Database: "${MONGO_DB:-enterprisehub_docs}"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__User: "${RABBITMQ_USER:-guest}"
+      RabbitMq__Password: "${RABBITMQ_PASSWORD:-guest}"
+      Kafka__BootstrapServers: "kafka:9092"
+      Email__SmtpHost: "${SMTP_HOST:-smtp.sendgrid.net}"
+      Email__SmtpPort: "${SMTP_PORT:-587}"
+      Email__SmtpUser: "${SMTP_USER:-apikey}"
+      Email__SmtpPassword: "${SMTP_PASSWORD:-YOUR_SENDGRID_API_KEY}"
+      Email__FromAddress: "${EMAIL_FROM:-no-reply@enterprisehub.dev}"
+      Jwt__Secret: "${JWT_SECRET:-YOUR_JWT_SIGNING_KEY_MIN_32_CHARS}"
+      Jwt__Issuer: "${JWT_ISSUER:-EnterpriseHub}"
+      Jwt__Audience: "${JWT_AUDIENCE:-EnterpriseHub.Client}"
+      Jwt__AccessTokenMinutes: "${JWT_ACCESS_TOKEN_MINUTES:-15}"
+      Jwt__RefreshTokenDays: "${JWT_REFRESH_TOKEN_DAYS:-7}"
 
   frontend:
     build:
@@ -156,7 +175,7 @@ services:
     depends_on:
       - api
     ports:
-      - "${FRONTEND_PORT:-5173}:5173"
+      - "${FRONTEND_PORT:-5173}:3000"
     environment:
       PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://localhost:5001}
 

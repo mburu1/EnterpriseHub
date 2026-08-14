@@ -10,7 +10,11 @@ services:
     command: ["dotnet", "watch", "run", "--project", "src/EnterpriseHub.API", "--urls", "http://0.0.0.0:8080"]
 
   frontend:
+    build:
+      target: build
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
     command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
