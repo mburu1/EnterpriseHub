@@ -41,7 +41,7 @@ jobs:
       # Integration and E2E suites spin up real containers (SQL Server, etc.) via Testcontainers,
       # which the ubuntu-latest runner's built-in Docker daemon supports without extra setup.
       - name: Test
-        run: dotnet test EnterpriseHub.slnx --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+        run: dotnet test EnterpriseHub.slnx --no-build --configuration Release --report-xunit-trx
 
       - name: Publish test results
         if: always()
