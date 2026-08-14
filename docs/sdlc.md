@@ -23,10 +23,12 @@ Sequenced deliberately in dependency order, matching the commit history on `main
 3. NuGet packages per layer, resolved to the latest non-vulnerable versions available (see
    `docs/adr/001-database-strategy.md`'s note on the one accepted `NU1608` exception).
 4. Domain model for all five bounded contexts (entities, value objects, domain events, repository
-   interfaces) — built first and fully, even though only the Identity/Auth vertical slice got
-   wired all the way to the API, so the shape of the whole system is visible in one place.
+   interfaces) — built first and fully, so the shape of the whole system was visible in one place
+   before any single context was wired end to end.
 5. Application layer: a hand-rolled CQRS dispatcher (see ADR discussion in
-   `docs/architecture.md`) plus the four `AuthController`-required use cases.
+   `docs/architecture.md`), starting with the four `AuthController`-required use cases and later
+   extended to every bounded context (Tenants, Projects/Tasks, Billing) once the Identity/Auth
+   slice proved the pattern end to end.
 6. Infrastructure: EF Core contexts for four relational stores, MongoDB, Redis, RabbitMQ, Kafka,
    SMTP, JWT/BCrypt.
 7. API: controllers, JWT bearer auth, Scalar docs, global exception handling, rate limiting.
@@ -64,6 +66,23 @@ Sequenced deliberately in dependency order, matching the commit history on `main
     directory (containing Windows-absolute NuGet fallback paths) leaked into the Linux build
     context and broke `dotnet publish --no-restore`. Both caught by running `docker build`
     locally before trusting the CI-only path.
+  - `Pomelo.EntityFrameworkCore.MySql` 9.0.0 (no EF Core 10 build exists) initially looked like
+    just a `NU1608` version-range warning. Running a probe test against a live MySQL container
+    showed `UseMySql(...)` itself threw `MissingMethodException` on every call — MySQL was
+    completely broken at runtime, not only for `dotnet ef` tooling, and nothing had caught it
+    because no test had actually opened a MySQL connection yet. Fixed by pinning the whole
+    solution to the coordinated EF Core 9.0.19 line across all four relational providers instead
+    of chasing a single-provider workaround (ADR-001).
+  - Adding `InviteMemberCommand` (a new `TenantInvitation` appended to an already-loaded, tracked
+    `Tenant`) threw `DbUpdateConcurrencyException: expected to affect 1 row(s), but actually
+    affected 0` on save. EF Core's change-tracking heuristic for a new child reached via
+    graph-fixup on an *already-tracked* parent (rather than an explicit `DbSet.Add(...)`) uses the
+    child's key value to guess Added vs. Modified — and since every aggregate in this domain
+    self-assigns its Guid `Id` in its factory method, the guess came out wrong. Caught by writing
+    and running the E2E test for the invite flow, not by reasoning about EF's tracking internals
+    up front. Fixed with `ValueGeneratedNever()` applied model-wide (`ModelBuilderExtensions
+    .UseClientGeneratedGuidKeys`) across all four DbContexts, plus `.Include(t => t.Invitations)`
+    on `TenantRepository.GetByIdAsync` for the same class of correctness.
 
   Each of these is now an ADR footnote or a comment at the fix site, not just a silent diff — the
   reasoning is preserved for whoever reads this next.
@@ -85,12 +104,10 @@ without requiring a live cluster to exist.
 
 ## Known gaps / next iteration
 
-Documented explicitly rather than left implicit:
-
-- Project/task/tenant-invitation/billing `Application` handlers and `API` controllers aren't
-  built yet — the domain and infrastructure are ready for them (see `docs/architecture.md`).
-- No transactional outbox for domain-event publishing (ADR-002).
-- No EF Core global query filter for tenant isolation — currently enforced per-query by passing
-  `tenantId` explicitly to every tenant-scoped repository method.
-- Frontend has the auth flow wired end-to-end; dashboard/projects/notifications/billing/admin
-  pages are route stubs pending the corresponding API endpoints.
+Documented explicitly rather than left implicit — see `docs/architecture.md`'s "What's built vs.
+what's deliberately not" for the current list. In short: every bounded context now has working
+handlers and controllers; what's left is tenant-admin actions beyond inviting (role changes,
+deactivation), a notification consumer + API, Oracle report generation, a transactional outbox for
+domain-event publishing (ADR-002), an EF Core global query filter for tenant isolation (currently
+enforced per-query by passing `tenantId` explicitly to every tenant-scoped repository method), and
+frontend wiring for everything past the auth flow.

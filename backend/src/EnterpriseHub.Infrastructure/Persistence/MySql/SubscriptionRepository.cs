@@ -11,7 +11,7 @@ public sealed class SubscriptionRepository(MySqlDbContext dbContext) : ISubscrip
     public Task AddAsync(Subscription subscription, CancellationToken ct = default)
     {
         dbContext.Subscriptions.Add(subscription);
-        return dbContext.SaveChangesAsync(ct);
+        return Task.CompletedTask;
     }
 
     public void Update(Subscription subscription) => dbContext.Subscriptions.Update(subscription);

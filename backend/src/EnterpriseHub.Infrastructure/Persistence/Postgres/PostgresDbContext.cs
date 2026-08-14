@@ -1,3 +1,4 @@
+using EnterpriseHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseHub.Infrastructure.Persistence.Postgres;
@@ -18,6 +19,7 @@ public sealed class PostgresDbContext(DbContextOptions<PostgresDbContext> option
             builder.HasIndex(a => new { a.TenantId, a.OccurredOn });
         });
 
+        modelBuilder.UseClientGeneratedGuidKeys();
         base.OnModelCreating(modelBuilder);
     }
 }

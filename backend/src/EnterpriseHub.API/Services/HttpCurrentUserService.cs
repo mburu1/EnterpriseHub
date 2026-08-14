@@ -26,4 +26,6 @@ public sealed class HttpCurrentUserService(IHttpContextAccessor httpContextAcces
             return Guid.TryParse(value, out var id) ? id : null;
         }
     }
+
+    public string? Role => Principal?.FindFirstValue(ClaimTypes.Role);
 }

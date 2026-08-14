@@ -72,6 +72,74 @@ specifically to prove the JWT round-trips through `[Authorize]` correctly.
 
 `401` if the token is missing, expired, or invalid.
 
+## Tenants
+
+Base path: `/tenants`. All endpoints require `Authorization: Bearer <accessToken>` except accepting
+an invitation (the invitee doesn't have an account yet).
+
+### `GET /tenants/me`
+
+Returns the authenticated user's own organization: `{ id, name, slug, subscriptionTier }`.
+
+### `POST /tenants/invitations`
+
+Invites a member by email. Requires the caller's role (from the JWT) to be `Owner` or `Admin` —
+otherwise `403`.
+
+```json
+{ "email": "new.member@acme.com", "role": "Member" }
+```
+
+Returns the invitation: `{ id, tenantId, email, role, accepted, expiresAt }`.
+
+### `GET /tenants/invitations`
+
+Lists all invitations (pending and accepted) for the caller's tenant.
+
+### `POST /tenants/invitations/{invitationId}/accept`
+
+Public — creates the invited user's account and returns a token pair, the same shape as
+`/auth/register`. `400` if the invitation doesn't exist, was already accepted, has expired, or an
+account with that email already exists.
+
+```json
+{ "password": "Password1", "firstName": "Grace", "lastName": "Hopper" }
+```
+
+## Projects
+
+Base path: `/projects`. All endpoints require auth and are scoped to the caller's tenant.
+
+- `GET /projects` — list the tenant's projects.
+- `POST /projects` — `{ "name": "...", "description": "..." }` → `ProjectDto`.
+- `GET /projects/{projectId}` — a single project, including its milestones.
+- `PATCH /projects/{projectId}/status` — `{ "status": "Active" }` (`Planning`, `Active`, `OnHold`,
+  `Completed`, `Archived`).
+- `POST /projects/{projectId}/milestones` — `{ "name": "...", "dueDate": "2026-09-01" }`.
+- `GET /projects/{projectId}/tasks` — list the project's tasks.
+- `POST /projects/{projectId}/tasks` — `{ "title": "...", "description": "...", "priority": "High",
+  "dueDate": null }` (`Low`, `Medium`, `High`, `Critical`).
+
+## Tasks
+
+Base path: `/tasks`. All endpoints require auth and are scoped to the caller's tenant.
+
+- `POST /tasks/{taskId}/assign` — `{ "assigneeId": "..." }`; `400` if the assignee isn't a member
+  of the same organization.
+- `PATCH /tasks/{taskId}/status` — `{ "status": "InProgress" }` (`Todo`, `InProgress`, `InReview`,
+  `Done`). Raises `TaskStatusChangedEvent` (see ADR-002) on change.
+
+## Billing
+
+Base path: `/billing`. All endpoints require auth.
+
+- `GET /billing/plans` — the fixed set of subscribable plans (seeded at startup — see
+  `PlanSeeder`).
+- `GET /billing/subscription` — the caller's tenant's current subscription, or `null` if none.
+- `POST /billing/subscription` — `{ "planId": "..." }`; `400` if the tenant already has a
+  non-canceled subscription.
+- `POST /billing/subscription/cancel` — cancels the tenant's active subscription.
+
 ## Health
 
 ### `GET /health`
@@ -93,6 +161,10 @@ All error responses use RFC 7807 `ProblemDetails`:
   "errors": { "Password": ["Password must contain an uppercase letter."] }
 }
 ```
+
+`403` is used specifically for authenticated-but-not-permitted actions (e.g. inviting a member
+without Owner/Admin role) — distinct from `400` (business rule violation) and `401`
+(unauthenticated).
 
 ## Rate limiting
 

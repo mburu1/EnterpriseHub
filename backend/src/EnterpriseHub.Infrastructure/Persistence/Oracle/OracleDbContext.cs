@@ -1,3 +1,4 @@
+using EnterpriseHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseHub.Infrastructure.Persistence.Oracle;
@@ -17,6 +18,7 @@ public sealed class OracleDbContext(DbContextOptions<OracleDbContext> options) :
             builder.Property(r => r.DataJson).HasColumnType("CLOB").IsRequired();
         });
 
+        modelBuilder.UseClientGeneratedGuidKeys();
         base.OnModelCreating(modelBuilder);
     }
 }

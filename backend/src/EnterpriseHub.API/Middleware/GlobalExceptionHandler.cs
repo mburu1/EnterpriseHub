@@ -21,6 +21,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                         .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())
                 }),
             DomainException domainEx => (StatusCodes.Status400BadRequest, domainEx.Message, []),
+            ForbiddenException forbiddenEx => (StatusCodes.Status403Forbidden, forbiddenEx.Message, []),
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized.", []),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", [])
         };

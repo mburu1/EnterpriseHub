@@ -1,6 +1,7 @@
 using EnterpriseHub.Domain.Identity;
 using EnterpriseHub.Domain.Projects;
 using EnterpriseHub.Domain.Tenants;
+using EnterpriseHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseHub.Infrastructure.Persistence.Mssql;
@@ -19,6 +20,7 @@ public sealed class MssqlDbContext(DbContextOptions<MssqlDbContext> options) : D
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MssqlDbContext).Assembly);
+        modelBuilder.UseClientGeneratedGuidKeys();
         base.OnModelCreating(modelBuilder);
     }
 }

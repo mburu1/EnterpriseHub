@@ -25,7 +25,6 @@ namespace EnterpriseHub.Infrastructure.Persistence.MySql.Migrations
             modelBuilder.Entity("EnterpriseHub.Domain.Billing.Plan", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -52,7 +51,6 @@ namespace EnterpriseHub.Infrastructure.Persistence.MySql.Migrations
             modelBuilder.Entity("EnterpriseHub.Domain.Billing.Subscription", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")

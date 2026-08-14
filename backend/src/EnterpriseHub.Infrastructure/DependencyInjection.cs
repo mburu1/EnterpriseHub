@@ -46,7 +46,9 @@ public static class DependencyInjection
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        services.AddScoped<IPlanRepository, PlanRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IBillingUnitOfWork, MySqlUnitOfWork>();
 
         // ---- MongoDB: unstructured activity feed / attachments ----
         services.Configure<MongoOptions>(configuration.GetSection(MongoOptions.SectionName));

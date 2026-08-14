@@ -5,6 +5,7 @@ using EnterpriseHub.Application;
 using EnterpriseHub.Application.Common.Interfaces;
 using EnterpriseHub.Infrastructure;
 using EnterpriseHub.Infrastructure.Options;
+using EnterpriseHub.Infrastructure.Persistence.MySql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
@@ -77,6 +78,22 @@ app.UseMiddleware<TenantRateLimitingMiddleware>();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+// Best-effort: don't block startup on the billing DB being reachable yet (e.g. compose still
+// bringing MySQL up); the app still serves everything else, and /billing/plans will just be
+// empty until the store comes back and a later request/seed run succeeds.
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var mySqlDbContext = scope.ServiceProvider.GetRequiredService<MySqlDbContext>();
+        await PlanSeeder.SeedAsync(mySqlDbContext);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Skipping plan seed — MySQL not reachable at startup.");
+    }
+}
 
 app.Run();
 

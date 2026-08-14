@@ -1,4 +1,5 @@
 using EnterpriseHub.Domain.Billing;
+using EnterpriseHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseHub.Infrastructure.Persistence.MySql;
@@ -33,6 +34,7 @@ public sealed class MySqlDbContext(DbContextOptions<MySqlDbContext> options) : D
             builder.Ignore(s => s.DomainEvents);
         });
 
+        modelBuilder.UseClientGeneratedGuidKeys();
         base.OnModelCreating(modelBuilder);
     }
 }

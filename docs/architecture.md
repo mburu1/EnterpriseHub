@@ -97,11 +97,23 @@ validation-then-dispatch pipeline is visible and auditable in ~40 lines
   against a real SQL Server container, with RabbitMQ/Kafka/SMTP/Redis swapped for no-op fakes so
   the suite only needs Docker, not the full `docker-compose` stack.
 
-## What's deliberately not built yet
+## What's built vs. what's deliberately not
 
-This is the auth vertical slice built end-to-end (domain → application → infrastructure → API →
-tests), plus the domain model, persistence mappings, and messaging plumbing for every bounded
-context. Project/task CRUD endpoints, tenant invitation endpoints, and billing endpoints are
-modeled in `Domain` and have repository implementations in `Infrastructure`, but don't yet have
-`Application` command/query handlers or `API` controllers — the next natural slices to build on
-top of this foundation.
+Every bounded context is wired end to end (domain → application → infrastructure → API → tests):
+Identity/Auth, Tenants (invitations), Projects/Tasks, and Billing all have working command/query
+handlers and controllers, backed by real repository implementations and exercised by tests running
+against real infrastructure rather than mocks (see Testing, above).
+
+Not yet built, on top of this foundation:
+
+- **Tenant admin beyond inviting members** — no endpoint to change a member's role, deactivate a
+  user, or remove them from the tenant (`User.Deactivate()` exists in the domain, unexposed).
+- **Notifications API** — the `Notification` aggregate and its MongoDB repository exist (ADR-001),
+  and `TaskAssignedEvent`/`TaskStatusChangedEvent` are published to RabbitMQ (ADR-002), but there's
+  no consumer yet that turns those events into `Notification` documents, and no
+  `GET /notifications` endpoint for the frontend to read them.
+- **Oracle reporting** — `ReportSnapshot`/`OracleDbContext` exist with no migration (ADR-001) and
+  no report-generation job writes to it yet.
+- **Frontend wiring for the new endpoints** — the SvelteKit routes for
+  dashboard/projects/notifications/billing/admin are still stubs; only the auth flow
+  (`lib/api/client.ts`) is wired to real endpoints.
