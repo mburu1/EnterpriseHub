@@ -16,6 +16,13 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
 
     protected void Touch() => UpdatedAt = DateTimeOffset.UtcNow;
 
+    /// <summary>Restores audit timestamps when rehydrating an entity from a persistence store.</summary>
+    protected void SetTimestamps(DateTimeOffset createdAt, DateTimeOffset? updatedAt)
+    {
+        CreatedAt = createdAt;
+        UpdatedAt = updatedAt;
+    }
+
     public bool Equals(Entity<TId>? other)
     {
         if (other is null) return false;
