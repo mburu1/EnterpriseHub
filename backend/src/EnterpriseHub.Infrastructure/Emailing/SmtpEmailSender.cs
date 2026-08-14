@@ -19,7 +19,7 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSend
         message.Subject = subject;
         message.Body = new BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
 
-        using var client = new SmtpClient();
+        using var client = new SmtpClient { Timeout = 5000 };
         await client.ConnectAsync(_options.SmtpHost, _options.SmtpPort, SecureSocketOptions.StartTls, ct);
         await client.AuthenticateAsync(_options.SmtpUser, _options.SmtpPassword, ct);
         await client.SendAsync(message, ct);

@@ -1,9 +1,11 @@
+// src/EnterpriseHub.Infrastructure/Persistence/Oracle/OracleDbContext.cs
+
 using EnterpriseHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseHub.Infrastructure.Persistence.Oracle;
 
-/// <summary>Reporting schema (ADR-001).</summary>
+/// <summary>Reporting schema — see docs/adr/001-database-strategy.md.</summary>
 public sealed class OracleDbContext(DbContextOptions<OracleDbContext> options) : DbContext(options)
 {
     public DbSet<ReportSnapshot> ReportSnapshots => Set<ReportSnapshot>();

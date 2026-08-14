@@ -56,6 +56,20 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddHealthChecks();
 
+// ---- CORS: the SvelteKit frontend runs on a different origin (Vite dev server / a separate
+// container in prod), so the browser enforces CORS on every request unless we opt in explicitly. ----
+const string FrontendCorsPolicy = "Frontend";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:5173"];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -70,6 +84,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(FrontendCorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();

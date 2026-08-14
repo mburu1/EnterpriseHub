@@ -20,7 +20,12 @@ public sealed class KafkaAuditEventPublisher : IAuditEventPublisher, IDisposable
         _producer = new ProducerBuilder<string, string>(new ProducerConfig
         {
             BootstrapServers = options.Value.BootstrapServers,
-            Acks = Acks.All
+            Acks = Acks.All,
+            // Audit delivery is best-effort (see UnitOfWork, which already swallows failures here) —
+            // these bound how long a request can be held up when the broker is unreachable, rather
+            // than inheriting librdkafka's multi-minute defaults.
+            MessageTimeoutMs = 5000,
+            SocketConnectionSetupTimeoutMs = 5000
         }).Build();
     }
 

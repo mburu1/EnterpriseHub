@@ -6,6 +6,7 @@ using EnterpriseHub.Application.Identity.Dtos;
 using EnterpriseHub.Domain.Common;
 using EnterpriseHub.Domain.Identity;
 using EnterpriseHub.Domain.Tenants;
+using Microsoft.Extensions.Logging;
 
 public sealed record RegisterUserCommand(
     string OrganizationName,
@@ -21,7 +22,8 @@ public sealed class RegisterUserCommandHandler(
     IPasswordHasher passwordHasher,
     IJwtTokenGenerator tokenGenerator,
     IEmailSender emailSender,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    ILogger<RegisterUserCommandHandler> logger)
     : ICommandHandler<RegisterUserCommand, AuthResponse>
 {
     public async Task<AuthResponse> Handle(RegisterUserCommand command, CancellationToken ct)
@@ -46,11 +48,20 @@ public sealed class RegisterUserCommandHandler(
 
         await unitOfWork.SaveChangesAsync(ct);
 
-        await emailSender.SendAsync(
-            email.Value,
-            "Welcome to EnterpriseHub",
-            $"<p>Hi {user.FirstName}, your organization <strong>{tenant.Name}</strong> is ready.</p>",
-            ct);
+        // Best-effort: the account is already committed at this point, so an SMTP outage must not
+        // turn a successful signup into a reported failure for the caller.
+        try
+        {
+            await emailSender.SendAsync(
+                email.Value,
+                "Welcome to EnterpriseHub",
+                $"<p>Hi {user.FirstName}, your organization <strong>{tenant.Name}</strong> is ready.</p>",
+                ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to send welcome email to {Email}.", email.Value);
+        }
 
         return new AuthResponse(
             accessToken.Token,

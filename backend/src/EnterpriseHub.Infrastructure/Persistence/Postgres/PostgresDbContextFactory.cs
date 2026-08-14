@@ -1,15 +1,25 @@
+// src/EnterpriseHub.Infrastructure/Persistence/Postgres/PostgresDbContextFactory.cs
+
+using EnterpriseHub.Infrastructure.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace EnterpriseHub.Infrastructure.Persistence.Postgres;
 
-/// <summary>Used only by `dotnet ef migrations add` — see MssqlDbContextFactory for rationale.</summary>
+/// <summary>
+/// Design-time factory for EF Core tooling (migrations, database update).
+/// Connection string is resolved from appsettings.json — never hardcoded.
+/// </summary>
 public sealed class PostgresDbContextFactory : IDesignTimeDbContextFactory<PostgresDbContext>
 {
     public PostgresDbContext CreateDbContext(string[] args)
     {
+        var connectionString = DesignTimeConfiguration
+            .Build()
+            .RequireConnectionString("Postgres");
+
         var options = new DbContextOptionsBuilder<PostgresDbContext>()
-            .UseNpgsql("Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=enterprisehub_analytics")
+            .UseNpgsql(connectionString)
             .Options;
 
         return new PostgresDbContext(options);

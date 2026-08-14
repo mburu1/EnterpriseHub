@@ -1,36 +1,65 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <ProjectReference Include="..\EnterpriseHub.Domain\EnterpriseHub.Domain.csproj" />
-    <ProjectReference Include="..\EnterpriseHub.Application\EnterpriseHub.Application.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
-    <PackageReference Include="Confluent.Kafka" Version="2.15.0" />
-    <PackageReference Include="MailKit" Version="4.17.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.19" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.19">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.19" />
-    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.11" />
-    <PackageReference Include="MongoDB.Driver" Version="3.11.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    <PackageReference Include="Oracle.EntityFrameworkCore" Version="9.23.26300" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
-    <PackageReference Include="RabbitMQ.Client" Version="7.2.2" />
-    <PackageReference Include="StackExchange.Redis" Version="3.1.13" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\EnterpriseHub.Domain\EnterpriseHub.Domain.csproj" />
+    <ProjectReference Include="..\EnterpriseHub.Application\EnterpriseHub.Application.csproj" />
+  </ItemGroup>
+
+  <!-- Core Infrastructure – all EF packages aligned to 10.0.10 -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+  </ItemGroup>
+
+  <!-- Multi-DB Support -->
+  <ItemGroup>
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.10" />
+    <PackageReference Include="MongoDB.Bson" Version="3.11.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.11.0" />
+    <PackageReference Include="MongoDB.Driver.Core" Version="2.30.0" />
+    <PackageReference Include="MongoDB.Driver.GridFS" Version="2.30.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <!-- <PackageReference Include="Oracle.EntityFrameworkCore" Version="10.23.26300" /> -->
+    <!-- <PackageReference Include="MongoDB.Driver" Version="3.11.0" /> -->
+  </ItemGroup>
+
+  <!-- Configuration & Options -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.11" />
+  </ItemGroup>
+
+  <!-- Caching & Messaging -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.11" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="10.23.26300" />
+    <PackageReference Include="StackExchange.Redis" Version="3.1.13" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.2.2" />
+    <PackageReference Include="Confluent.Kafka" Version="2.15.0" />
+  </ItemGroup>
+
+  <!-- Security & Authentication -->
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.11" />
+  </ItemGroup>
+
+  <!-- Communication -->
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.17.0" />
+  </ItemGroup>
 </Project>
