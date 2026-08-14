@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enterprisehub-frontend
+  namespace: enterprisehub
+  labels:
+    app: enterprisehub-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: enterprisehub-frontend
+  template:
+    metadata:
+      labels:
+        app: enterprisehub-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/mburu1/enterprisehub-frontend:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: enterprisehub-config
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: enterprisehub-frontend
+  namespace: enterprisehub
+spec:
+  selector:
+    app: enterprisehub-frontend
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP

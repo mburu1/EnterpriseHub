@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: enterprisehub-config
+  namespace: enterprisehub
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:8080"
+  RabbitMq__Host: "rabbitmq"
+  RabbitMq__Port: "5672"
+  Kafka__BootstrapServers: "kafka:9092"
+  Mongo__ConnectionString: "mongodb://mongo:27017/"
+  ConnectionStrings__Redis: "redis:6379"
+  PUBLIC_API_BASE_URL: "http://enterprisehub-backend"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: enterprisehub-secrets
+  namespace: enterprisehub
+  annotations:
+    note: "Placeholder only — replace with real values via `kubectl create secret generic enterprisehub-secrets --from-literal=...` or a secrets manager (never commit real secrets)."
+type: Opaque
+stringData:
+  ConnectionStrings__Mssql: "Server=mssql;Database=EnterpriseHub;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=True;"
+  ConnectionStrings__Postgres: "Host=postgres;Port=5432;Username=postgres;Password=YOUR_PASSWORD;Database=enterprisehub_analytics"
+  ConnectionStrings__MySql: "Server=mysql;Port=3306;Database=enterprisehub_billing;User=root;Password=YOUR_PASSWORD;"
+  ConnectionStrings__Oracle: "User Id=system;Password=YOUR_PASSWORD;Data Source=oracle:1521/XEPDB1;"
+  Jwt__Secret: "REPLACE_WITH_A_32_CHAR_MINIMUM_SECRET"
+  Email__SmtpPassword: "YOUR_SENDGRID_API_KEY"

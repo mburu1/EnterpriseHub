@@ -53,6 +53,8 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -74,6 +76,7 @@ app.UseAuthorization();
 app.UseMiddleware<TenantRateLimitingMiddleware>();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();
 
