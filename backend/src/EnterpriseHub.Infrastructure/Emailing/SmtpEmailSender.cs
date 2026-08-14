@@ -5,7 +5,7 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
-namespace EnterpriseHub.Infrastructure.Email;
+namespace EnterpriseHub.Infrastructure.Emailing;
 
 public sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSender
 {

@@ -5,7 +5,7 @@ using EnterpriseHub.Domain.Notifications;
 using EnterpriseHub.Domain.Projects;
 using EnterpriseHub.Domain.Tenants;
 using EnterpriseHub.Infrastructure.Cache;
-using EnterpriseHub.Infrastructure.Email;
+using EnterpriseHub.Infrastructure.Emailing;
 using EnterpriseHub.Infrastructure.Identity;
 using EnterpriseHub.Infrastructure.Messaging.Kafka;
 using EnterpriseHub.Infrastructure.Messaging.RabbitMQ;

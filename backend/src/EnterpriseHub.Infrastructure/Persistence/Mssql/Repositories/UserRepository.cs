@@ -10,14 +10,14 @@ public sealed class UserRepository(MssqlDbContext dbContext) : IUserRepository
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
-        var normalized = email.Trim().ToLowerInvariant();
-        return dbContext.Users.FirstOrDefaultAsync(u => u.Email.Value == normalized, ct);
+        var normalized = Email.Create(email);
+        return dbContext.Users.FirstOrDefaultAsync(u => u.Email == normalized, ct);
     }
 
     public Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default)
     {
-        var normalized = email.Trim().ToLowerInvariant();
-        return dbContext.Users.AnyAsync(u => u.Email.Value == normalized, ct);
+        var normalized = Email.Create(email);
+        return dbContext.Users.AnyAsync(u => u.Email == normalized, ct);
     }
 
     public Task AddAsync(User user, CancellationToken ct = default)

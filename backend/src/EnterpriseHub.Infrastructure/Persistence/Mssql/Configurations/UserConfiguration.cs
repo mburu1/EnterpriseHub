@@ -12,7 +12,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
 
         builder.Property(u => u.Email)
-            .HasConversion(e => e.Value, v => EnterpriseHub.Domain.Identity.Email.Create(v))
+            .HasConversion(e => e.Value, v => Email.Create(v))
             .HasColumnName("Email")
             .HasMaxLength(256)
             .IsRequired();
