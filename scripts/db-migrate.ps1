@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-    Applies EF Core migrations to the relational stores that have them (MSSQL, PostgreSQL).
+    Applies EF Core migrations to the relational stores that have them (MSSQL, PostgreSQL, MySQL).
 
 .DESCRIPTION
-    MySQL is intentionally excluded — see docs/adr/001-database-strategy.md's note on Pomelo's
-    EF Core 10 incompatibility for design-time tooling. Run docker-compose up first so the
-    target databases are reachable.
+    Oracle is excluded — no local Oracle instance was available to validate a migration against
+    (see docs/adr/001-database-strategy.md). Run docker-compose up first so the target databases
+    are reachable.
 #>
 param(
     [string]$BackendPath = (Join-Path $PSScriptRoot "..\backend")
@@ -13,7 +13,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$contexts = @("MssqlDbContext", "PostgresDbContext")
+$contexts = @("MssqlDbContext", "PostgresDbContext", "MySqlDbContext")
 
 foreach ($context in $contexts) {
     Write-Host "Applying migrations for $context..." -ForegroundColor Cyan

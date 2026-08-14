@@ -43,13 +43,22 @@ on repository interfaces, never on a specific provider.
 - **Con**: no cross-store transactions — a write that spans, say, MSSQL and the Mongo notification
   store cannot be atomic. Mitigated by the domain-event + message-bus pattern (ADR-002): the primary
   write commits first, and downstream stores are updated via at-least-once event delivery.
-- **Known limitation**: `Pomelo.EntityFrameworkCore.MySql` 9.0.0 had not yet published an EF Core
-  10 build at the time this was built (see `NU1608` warning during restore). The app builds and
-  runs fine against it, but `dotnet ef migrations add --context MySqlDbContext` fails at design
-  time with `MissingMethodException: AbstractionsStrings.ArgumentIsEmpty` — an actual binary
-  incompatibility between Pomelo's compiled reference to EF Core 9 abstractions and the EF Core 10
-  abstractions in this project, not just a version-range warning. MSSQL and PostgreSQL migrations
-  are checked in (`Persistence/{Mssql,Postgres}/Migrations`); the MySQL billing schema currently
-  ships via `Database.EnsureCreated()`-equivalent setup until Pomelo publishes an EF Core
-  10-targeted release, at which point `dotnet ef migrations add --context MySqlDbContext` should
-  be re-run.
+- **Resolved during this project**: `Pomelo.EntityFrameworkCore.MySql` had not yet published an EF
+  Core 10 build. Initially this looked like just a `NU1608` version-range warning, but running
+  against it for real showed it was worse: `UseMySql(...)` itself threw
+  `MissingMethodException: AbstractionsStrings.ArgumentIsEmpty` on every call — a genuine binary
+  incompatibility between Pomelo's compiled reference to EF Core 9 abstractions and EF Core 10's
+  abstractions, not just a version-range mismatch. This meant MySQL was completely unusable at
+  *runtime*, not only for `dotnet ef` design-time tooling — undiscovered until a probe test
+  actually opened a connection, since nothing had exercised `MySqlDbContext` before then.
+  **Fix**: rather than special-case MySQL, the whole solution was pinned to the coordinated EF
+  Core 9.0.19 line across all four relational providers (`Microsoft.EntityFrameworkCore*` 9.0.19,
+  `Npgsql.EntityFrameworkCore.PostgreSQL` 9.0.4, `Oracle.EntityFrameworkCore` 9.23.26300,
+  `Pomelo.EntityFrameworkCore.MySql` 9.0.0 unchanged) — one stable, mutually-compatible EF Core
+  major version beats being one released Pomelo update ahead on a single provider while the
+  MySQL-backed billing module silently doesn't work. All four contexts now have checked-in
+  migrations (`Persistence/{Mssql,Postgres,MySql}/Migrations`) and are exercised by
+  `scripts/db-migrate.ps1`. Oracle migrations aren't generated (no local Oracle instance was
+  available to validate `Database.Migrate()` against in this environment) — the schema is
+  otherwise fully mapped and would follow the same `dotnet ef migrations add --context
+  OracleDbContext` pattern once validated against a real instance.
