@@ -1,0 +1,89 @@
+@startuml erd
+title EnterpriseHub — Primary Store (SQL Server) ERD
+
+skinparam linetype ortho
+
+entity "Tenants" as tenant {
+  * Id : uniqueidentifier <<PK>>
+  --
+  Name : nvarchar(200)
+  Slug : nvarchar(200) <<unique>>
+  SubscriptionTier : nvarchar(20)
+  IsActive : bit
+}
+
+entity "TenantInvitations" as invitation {
+  * Id : uniqueidentifier <<PK>>
+  --
+  TenantId : uniqueidentifier <<FK>>
+  Email : nvarchar(256)
+  Role : nvarchar(20)
+  Accepted : bit
+  ExpiresAt : datetimeoffset
+}
+
+entity "Users" as user {
+  * Id : uniqueidentifier <<PK>>
+  --
+  TenantId : uniqueidentifier <<FK, indexed>>
+  Email : nvarchar(256) <<unique>>
+  PasswordHash : nvarchar(max)
+  FirstName : nvarchar(100)
+  LastName : nvarchar(100)
+  Role : nvarchar(20)
+  IsActive : bit
+}
+
+entity "RefreshTokens" as token {
+  * Id : uniqueidentifier <<PK>>
+  --
+  UserId : uniqueidentifier <<FK>>
+  TokenHash : nvarchar(max) <<unique>>
+  ExpiresAt : datetimeoffset
+  RevokedAt : datetimeoffset?
+  ReplacedByTokenId : uniqueidentifier?
+}
+
+entity "Projects" as project {
+  * Id : uniqueidentifier <<PK>>
+  --
+  TenantId : uniqueidentifier <<FK, indexed>>
+  Name : nvarchar(200)
+  Status : nvarchar(20)
+}
+
+entity "Milestones" as milestone {
+  * Id : uniqueidentifier <<PK>>
+  --
+  ProjectId : uniqueidentifier <<FK>>
+  Name : nvarchar(200)
+  DueDate : date?
+  IsCompleted : bit
+}
+
+entity "ProjectTasks" as task {
+  * Id : uniqueidentifier <<PK>>
+  --
+  TenantId : uniqueidentifier
+  ProjectId : uniqueidentifier <<FK, indexed with TenantId>>
+  Title : nvarchar(300)
+  Status : nvarchar(20)
+  Priority : nvarchar(20)
+  AssigneeId : uniqueidentifier?
+  DueDate : date?
+}
+
+tenant ||--o{ invitation
+tenant ||--o{ user
+user ||--o{ token
+tenant ||--o{ project
+project ||--o{ milestone
+project ||--o{ task
+
+note right of user
+  Email is globally unique
+  (see ADR-003) — not scoped
+  per tenant.
+end note
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml sequence-auth
+title JWT Auth Flow — Register then Authenticated Request
+
+actor Client
+participant "AuthController" as Controller
+participant "Dispatcher\n(ISender)" as Dispatcher
+participant "RegisterUserCommandHandler" as Handler
+participant "IPasswordHasher\n(BCrypt)" as Hasher
+participant "IJwtTokenGenerator" as Jwt
+participant "IUnitOfWork" as UoW
+database "SQL Server" as DB
+participant "IEventPublisher\n(RabbitMQ)" as MQ
+participant "IAuditEventPublisher\n(Kafka)" as Kafka
+
+Client -> Controller: POST /auth/register
+Controller -> Dispatcher: Send(RegisterUserCommand)
+Dispatcher -> Dispatcher: validate via IValidator<T>
+Dispatcher -> Handler: Handle(command)
+Handler -> Hasher: Hash(password)
+Handler -> Handler: Tenant.Create(...)\nUser.Register(...)\n(raises UserRegisteredEvent)
+Handler -> Jwt: GenerateAccessToken(user)
+Handler -> Jwt: GenerateRefreshToken()
+Handler -> UoW: SaveChangesAsync()
+UoW -> DB: commit tenant + user + refresh token
+UoW -> MQ: publish UserRegisteredEvent
+UoW -> Kafka: publish UserRegisteredEvent
+Handler --> Controller: AuthResponse
+Controller --> Client: 200 OK\n{ accessToken, refreshToken, user }
+
+== Later: authenticated request ==
+
+Client -> Controller: GET /auth/me\nAuthorization: Bearer <accessToken>
+Controller -> Controller: JwtBearer middleware validates signature + expiry
+Controller -> Dispatcher: Send(GetCurrentUserQuery)
+Dispatcher -> DB: load user by id
+Dispatcher --> Controller: UserDto
+Controller --> Client: 200 OK
+
+@enduml

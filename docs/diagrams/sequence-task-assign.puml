@@ -1,0 +1,35 @@
+@startuml sequence-task-assign
+title Task Assignment — Domain Event Fan-out
+
+participant "ProjectTask\n(aggregate)" as Task
+participant "IUnitOfWork" as UoW
+database "SQL Server" as DB
+participant "IEventPublisher\n(RabbitMQ)" as MQ
+participant "IAuditEventPublisher\n(Kafka)" as Kafka
+queue "enterprisehub.events\n(topic exchange)" as Exchange
+queue "enterprisehub.audit-events" as Topic
+participant "Notification Consumer\n(future worker)" as NotifyWorker
+database "MongoDB" as Mongo
+participant "Audit Consumer\n(future worker)" as AuditWorker
+database "PostgreSQL" as Postgres
+
+-> Task: AssignTo(assigneeId)
+Task -> Task: AssigneeId = assigneeId\nRaise(TaskAssignedEvent)
+-> UoW: SaveChangesAsync()
+UoW -> DB: commit ProjectTask
+UoW -> UoW: gather DomainEvents from\ntracked aggregates
+UoW -> MQ: PublishAsync(TaskAssignedEvent)
+MQ -> Exchange: routing key = "TaskAssignedEvent"
+UoW -> Kafka: PublishAsync(TaskAssignedEvent)
+Kafka -> Topic: key = "TaskAssignedEvent"
+UoW -> Task: ClearDomainEvents()
+
+... asynchronously, decoupled from the request ...
+
+Exchange -> NotifyWorker: deliver TaskAssignedEvent
+NotifyWorker -> Mongo: insert Notification\n(type=TaskAssigned)
+
+Topic -> AuditWorker: deliver TaskAssignedEvent
+AuditWorker -> Postgres: insert into audit_log
+
+@enduml

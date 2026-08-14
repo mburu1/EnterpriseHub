@@ -1,0 +1,146 @@
+@startuml class-diagram
+title EnterpriseHub — Domain Model (core aggregates)
+
+abstract class "Entity<TId>" as Entity {
+  +TId Id
+  +DateTimeOffset CreatedAt
+  +DateTimeOffset? UpdatedAt
+}
+
+abstract class "AggregateRoot<TId>" as AggregateRoot {
+  +IReadOnlyCollection<IDomainEvent> DomainEvents
+  #Raise(IDomainEvent)
+  +ClearDomainEvents()
+}
+Entity <|-- AggregateRoot
+
+interface ITenantScoped {
+  +Guid TenantId
+}
+
+interface IHasDomainEvents {
+  +DomainEvents
+  +ClearDomainEvents()
+}
+AggregateRoot ..|> IHasDomainEvents
+
+class Tenant {
+  +string Name
+  +string Slug
+  +SubscriptionTier SubscriptionTier
+  +InviteMember(email, role)
+  +UpgradeSubscription(tier)
+}
+AggregateRoot <|-- Tenant
+
+class TenantInvitation {
+  +Guid TenantId
+  +string Email
+  +TenantRole Role
+  +bool Accepted
+  +Accept()
+}
+Entity <|-- TenantInvitation
+ITenantScoped <|.. TenantInvitation
+Tenant *-- "0..*" TenantInvitation
+
+class User {
+  +Guid TenantId
+  +Email Email
+  +string PasswordHash
+  +TenantRole Role
+  +IssueRefreshToken(hash, lifetime)
+  +Deactivate()
+}
+AggregateRoot <|-- User
+ITenantScoped <|.. User
+
+class RefreshToken {
+  +Guid UserId
+  +string TokenHash
+  +DateTimeOffset ExpiresAt
+  +bool IsActive
+  +Revoke(replacedByTokenId)
+}
+Entity <|-- RefreshToken
+User *-- "0..*" RefreshToken
+
+class Email <<value object>> {
+  +string Value
+  {static} +Create(value): Email
+}
+User o-- Email
+
+enum TenantRole {
+  Owner
+  Admin
+  Member
+  Viewer
+}
+
+class Project {
+  +Guid TenantId
+  +string Name
+  +ProjectStatus Status
+  +AddMilestone(name, dueDate)
+  +ChangeStatus(status)
+}
+AggregateRoot <|-- Project
+ITenantScoped <|.. Project
+
+class Milestone {
+  +Guid ProjectId
+  +string Name
+  +bool IsCompleted
+}
+Entity <|-- Milestone
+Project *-- "0..*" Milestone
+
+class ProjectTask {
+  +Guid TenantId
+  +Guid ProjectId
+  +string Title
+  +ProjectTaskStatus Status
+  +TaskPriority Priority
+  +Guid? AssigneeId
+  +AssignTo(assigneeId)
+  +ChangeStatus(newStatus)
+}
+AggregateRoot <|-- ProjectTask
+ITenantScoped <|.. ProjectTask
+
+class Subscription {
+  +Guid TenantId
+  +Guid PlanId
+  +SubscriptionStatus Status
+  +Activate()
+  +Cancel()
+  +Renew(newPeriodEnd)
+}
+AggregateRoot <|-- Subscription
+ITenantScoped <|.. Subscription
+
+class Plan {
+  +string Name
+  +Money Price
+  +BillingInterval Interval
+}
+Entity <|-- Plan
+
+class Money <<value object>> {
+  +decimal Amount
+  +string Currency
+}
+Plan o-- Money
+
+class Notification {
+  +Guid TenantId
+  +Guid UserId
+  +NotificationType Type
+  +bool IsRead
+  +MarkAsRead()
+}
+Entity <|-- Notification
+ITenantScoped <|.. Notification
+
+@enduml

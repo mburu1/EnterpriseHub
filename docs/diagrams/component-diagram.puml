@@ -1,0 +1,49 @@
+@startuml component-diagram
+title EnterpriseHub — Component Overview
+
+skinparam componentStyle rectangle
+
+package "Frontend" {
+  [SvelteKit App] as FE
+}
+
+package "Backend" {
+  [EnterpriseHub.API] as API
+  [EnterpriseHub.Application] as APP
+  [EnterpriseHub.Domain] as DOM
+  [EnterpriseHub.Infrastructure] as INFRA
+}
+
+package "Data Stores" {
+  database "SQL Server" as MSSQL
+  database "PostgreSQL" as PG
+  database "MySQL" as MYSQL
+  database "Oracle" as ORACLE
+  database "MongoDB" as MONGO
+  database "Redis" as REDIS
+}
+
+package "Messaging" {
+  queue "RabbitMQ" as MQ
+  queue "Kafka" as KAFKA
+}
+
+cloud "SMTP (SendGrid)" as SMTP
+
+FE --> API : HTTPS / REST
+API --> APP : ISender.Send(command|query)
+APP --> DOM : repository interfaces
+INFRA ..> DOM : implements
+API --> INFRA : DI composition root
+
+INFRA --> MSSQL : EF Core (tenants, users, projects, tasks)
+INFRA --> PG : EF Core (audit log)
+INFRA --> MYSQL : EF Core (billing)
+INFRA --> ORACLE : EF Core (report snapshots)
+INFRA --> MONGO : MongoDB.Driver (notifications)
+INFRA --> REDIS : StackExchange.Redis (cache, rate limit)
+INFRA --> MQ : domain events (operational)
+INFRA --> KAFKA : domain events (audit stream)
+INFRA --> SMTP : MailKit (transactional email)
+
+@enduml
