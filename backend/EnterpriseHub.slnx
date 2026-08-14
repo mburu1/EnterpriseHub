@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EnterpriseHub.API/EnterpriseHub.API.csproj" />
+    <Project Path="src/EnterpriseHub.Application/EnterpriseHub.Application.csproj" />
+    <Project Path="src/EnterpriseHub.Domain/EnterpriseHub.Domain.csproj" />
+    <Project Path="src/EnterpriseHub.Infrastructure/EnterpriseHub.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/EnterpriseHub.Tests/" />
+  <Folder Name="/src/EnterpriseHub.Tests/E2E/">
+    <Project Path="src/EnterpriseHub.Tests/E2E/EnterpriseHub.Tests.E2E.csproj" />
+  </Folder>
+  <Folder Name="/src/EnterpriseHub.Tests/Integration/">
+    <Project Path="src/EnterpriseHub.Tests/Integration/EnterpriseHub.Tests.Integration.csproj" />
+  </Folder>
+  <Folder Name="/src/EnterpriseHub.Tests/Unit/">
+    <Project Path="src/EnterpriseHub.Tests/Unit/EnterpriseHub.Tests.Unit.csproj" />
+  </Folder>
+</Solution>
