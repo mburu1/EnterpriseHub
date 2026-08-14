@@ -1,0 +1,62 @@
+name: CD - Production
+
+# Deploys to the production AKS cluster whenever main is updated, once Docker images have
+# been published. Requires repo secret KUBE_CONFIG_PRODUCTION (base64 kubeconfig); if it's
+# not configured yet, the deploy step is skipped rather than failing the run. Uses the
+# `production` environment so it can be gated with required reviewers in repo settings.
+
+on:
+  workflow_run:
+    workflows: ['Docker Publish']
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check production cluster credentials are configured
+        id: check
+        run: |
+          if [ -z "${{ secrets.KUBE_CONFIG_PRODUCTION }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::KUBE_CONFIG_PRODUCTION secret is not set — skipping deploy. Configure it in repo settings to enable this stage."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up kubeconfig
+        if: steps.check.outputs.configured == 'true'
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > "$HOME/.kube/config"
+
+      - name: Set up kubectl
+        if: steps.check.outputs.configured == 'true'
+        uses: azure/setup-kubectl@v4
+
+      - name: Apply manifests
+        if: steps.check.outputs.configured == 'true'
+        run: |
+          kubectl apply -f infrastructure/k8s/namespaces.yml
+          kubectl apply -f infrastructure/k8s/configmaps/app-config.yml
+          kubectl apply -f infrastructure/k8s/redis-deployment.yml
+          kubectl apply -f infrastructure/k8s/rabbitmq-deployment.yml
+          kubectl apply -f infrastructure/k8s/kafka-deployment.yml
+          kubectl apply -f infrastructure/k8s/backend-deployment.yml
+          kubectl apply -f infrastructure/k8s/frontend-deployment.yml
+          kubectl apply -f infrastructure/k8s/ingress.yml
+
+      - name: Roll out latest images
+        if: steps.check.outputs.configured == 'true'
+        run: |
+          kubectl -n enterprisehub set image deployment/enterprisehub-backend api=ghcr.io/${{ github.repository_owner }}/enterprisehub-api:latest
+          kubectl -n enterprisehub set image deployment/enterprisehub-frontend frontend=ghcr.io/${{ github.repository_owner }}/enterprisehub-frontend:latest
+          kubectl -n enterprisehub rollout status deployment/enterprisehub-backend --timeout=180s
+          kubectl -n enterprisehub rollout status deployment/enterprisehub-frontend --timeout=180s

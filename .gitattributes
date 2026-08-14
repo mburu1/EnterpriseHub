@@ -1,0 +1,9 @@
+# Normalize line endings to LF in the repository regardless of the checkout OS,
+# matching .editorconfig's end_of_line = lf. Prevents Windows' core.autocrlf from
+# producing CRLF locally while Linux CI checks out LF, which otherwise disagrees
+# with `dotnet format` and other linters.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
